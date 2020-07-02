@@ -55,7 +55,7 @@ function hasMutation(dna) {
                 if (nSeguidasHorizontal === 4) {
                     nSecuencias++
                 }
-                nSeguidasHorizontal = 0
+                nSeguidasHorizontal = 1
             }
             anteriorCaracterHorizontal = dna[i][j];
 
@@ -66,7 +66,7 @@ function hasMutation(dna) {
                 if (nSeguidasVertical === 4) {
                     nSecuencias++
                 }
-                nSeguidasVertical = 0
+                nSeguidasVertical = 1
             }
             anteriorCaracterVertical = dna[j][i]
         }
@@ -100,7 +100,7 @@ function hasMutation(dna) {
                     if (nSeguidas === 4) {
                         nSecuencias++
                     }
-                    nSeguidas = 0
+                    nSeguidas = 1
                 }
                 ultimoCaracter = caracterActual;
             }
