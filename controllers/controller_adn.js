@@ -187,8 +187,31 @@ class controller_adn {
         }
     }
 
-    static estadisticas(req, res) {
-        return {}
+    static async estadisticas(req, res) {
+
+        try {
+
+            const mutacion = await estadisticaAdn.findOne({ nombre: "n_mutaciones" });
+            const noMutaciones = await estadisticaAdn.findOne({ nombre: "n_Nomutaciones" });
+            let ratio = 0;
+
+            if (noMutaciones && mutacion) {
+                ratio = mutacion.valor/noMutaciones.valor;
+            } 
+
+            return res.status(200).json({
+                ADN: {
+                    count_mutations: mutacion ? mutacion.valor : 0 ,
+                    count_no_mutation: noMutaciones ? noMutaciones.valor : 0,
+                    ratio: ratio
+                }
+            })
+
+        } catch (error) {
+            return res.status(500).json({
+                mensaje: 'Error-500'
+            })
+        }
     }
 }
 
