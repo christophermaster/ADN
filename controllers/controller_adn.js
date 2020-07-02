@@ -55,7 +55,7 @@ function hasMutation(dna) {
                 if (nSeguidasHorizontal === 4) {
                     nSecuencias++
                 }
-                nSeguidasHorizontal = 1
+                nSeguidasHorizontal = 0
             }
             anteriorCaracterHorizontal = dna[i][j];
 
@@ -66,7 +66,7 @@ function hasMutation(dna) {
                 if (nSeguidasVertical === 4) {
                     nSecuencias++
                 }
-                nSeguidasVertical = 1
+                nSeguidasVertical = 0
             }
             anteriorCaracterVertical = dna[j][i]
         }
@@ -100,7 +100,7 @@ function hasMutation(dna) {
                     if (nSeguidas === 4) {
                         nSecuencias++
                     }
-                    nSeguidas = 1
+                    nSeguidas = 0
                 }
                 ultimoCaracter = caracterActual;
             }
@@ -116,26 +116,33 @@ function hasMutation(dna) {
 
 class controller_adn {
 
+    // Metodo que se encarga de verificar la mutaciones
     static async detectarMutacion(req, res) {
+
         const dna = req.body.dna
         const esValida = esBaseNitrogenadaValida(dna)
 
         try {
+
             if (dna && esValida && hasMutation(dna)) {
+
+                //Guardo las cadenas y digo si es una mutacion o no 
                 let body = {
                     "ADN": dna,
                     "mutado": 1,
                 }
                 await registroAdn.create(body);
 
+                //verifico si el tipo de estadistica existe 
                 const cantidad = await estadisticaAdn.findOne({ nombre: "n_mutaciones" });
-
+                //si existe actualizo
                 if (cantidad) {
                     body = {
                         "valor": 1 + cantidad.valor,
                     }
-                    await estadisticaAdn.update(body);
+                    await estadisticaAdn.update({ nombre: "n_mutaciones" },body);
                 } else {
+                    // sino creo el registro
                     body = {
                         "nombre": "n_mutaciones",
                         "valor": 1,
@@ -143,10 +150,10 @@ class controller_adn {
                     await estadisticaAdn.create(body);
                 }
 
-
                 return res.status(200).json({
                     mensaje: 'OK'
                 })
+
             } else {
 
                 if (esValida) {
@@ -155,18 +162,17 @@ class controller_adn {
                         "ADN": dna,
                         "mutado": 0,
                     }
+
                     await registroAdn.create(body);
-                    console.log("1")
+
                     const cantidad = await estadisticaAdn.findOne({ nombre: "n_Nomutaciones" });
-                    console.log("2")
+
                     if (cantidad) {
                         body = {
                             "valor": 1 + cantidad.valor,
                         }
-                        console.log("3")
-                        await estadisticaAdn.update(body);
+                        await estadisticaAdn.update({ nombre: "n_Nomutaciones" },body);
                     } else {
-                        console.log("4")
                         body = {
                             "nombre": "n_Nomutaciones",
                             "valor": 1,
@@ -175,7 +181,6 @@ class controller_adn {
                     }
 
                 }
-
                 return res.status(403).json({
                     mensaje: 'Forbidden'
                 })
@@ -187,6 +192,7 @@ class controller_adn {
         }
     }
 
+    // calcula la estadisticas
     static async estadisticas(req, res) {
 
         try {
