@@ -20,6 +20,6 @@ app.use('/', cors(corsOptions), routers);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const server = app.listen(process.env.PORT || 4000, () => {
+const server = app.listen(process.env.PORT || 5000, () => {
   console.log(`http://localhost:${server.address().port}`)
 })

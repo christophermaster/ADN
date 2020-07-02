@@ -1,8 +1,12 @@
 'use strict'
+import registroAdn from '../models/model_registro';
+import estadisticaAdn from '../models/model_estadistica';
+
+import { json } from 'body-parser';
 
 // Funcion que se encarga de validar si la entrada de datos es correcta
 function esBaseNitrogenadaValida(dna) {
-    
+
     /**
      * Se usa para
      * validar que tenga solo las letras ATCG
@@ -14,25 +18,25 @@ function esBaseNitrogenadaValida(dna) {
     // longitid del arreglo
     const n = dna.length;
 
-    while (esValida && i < n){
+    while (esValida && i < n) {
         esValida = /^[ATCG]+$/.test(dna[i]) && dna[i].length === n;
         i++;
     }
 
     return esValida;
 }
-
+//funcion q verifica adn Mutado
 function hasMutation(dna) {
-    
+
     // se calcula el tamaño del array
     const n = dna.length
     /**
      * Es para saber el numero de secuencia (4 iguales) encontrada en el adn
      * para saber si esta mutado
-     */ 
+     */
     let nSecuencias = 0;
 
-    for(let i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
 
         //para guardar el registro anterior del array 
         let anteriorCaracterHorizontal = ""
@@ -42,7 +46,7 @@ function hasMutation(dna) {
         let nSeguidasHorizontal = 0
         let nSeguidasVertical = 0
 
-        for(let j = 0; j < n; j++) {
+        for (let j = 0; j < n; j++) {
 
             //horizontal
             if (anteriorCaracterHorizontal === "" || anteriorCaracterHorizontal === dna[i][j]) {
@@ -52,7 +56,7 @@ function hasMutation(dna) {
                     nSecuencias++
                 }
                 nSeguidasHorizontal = 1
-            } 
+            }
             anteriorCaracterHorizontal = dna[i][j];
 
             //vertical
@@ -77,19 +81,19 @@ function hasMutation(dna) {
     }
 
     //diagonal
-    for(let i = 0; i < 2*n - 1; i++) {
-        
+    for (let i = 0; i < 2 * n - 1; i++) {
+
         let ultimoCaracter = ""
         let nSeguidas = 0
 
         const col_inicial = Math.max(0, i - n)
         const iteraciones = Math.min(i, (n - col_inicial), n)
-        if(iteraciones >= 4){
+        if (iteraciones >= 4) {
 
-            for (let j = 0;j < iteraciones; j++) {
-    
+            for (let j = 0; j < iteraciones; j++) {
+
                 const caracterActual = dna[Math.min(n, i) - j - 1][col_inicial + j]
-    
+
                 if (ultimoCaracter === "" || ultimoCaracter === caracterActual) {
                     nSeguidas++
                 } else {
@@ -100,7 +104,7 @@ function hasMutation(dna) {
                 }
                 ultimoCaracter = caracterActual;
             }
-    
+
             if (nSeguidas === 4) {
                 nSecuencias++
             }
@@ -114,14 +118,64 @@ class controller_adn {
 
     static async detectarMutacion(req, res) {
         const dna = req.body.dna
-        esBaseNitrogenadaValida(dna)
-        hasMutation(dna)
+        const esValida = esBaseNitrogenadaValida(dna)
+
         try {
-            if (dna && esBaseNitrogenadaValida(dna) && hasMutation(dna)) {
+            if (dna && esValida && hasMutation(dna)) {
+                let body = {
+                    "ADN": dna,
+                    "mutado": 1,
+                }
+                await registroAdn.create(body);
+
+                const cantidad = await estadisticaAdn.findOne({ nombre: "n_mutaciones" });
+
+                if (cantidad) {
+                    body = {
+                        "valor": 1 + cantidad.valor,
+                    }
+                    await estadisticaAdn.update(body);
+                } else {
+                    body = {
+                        "nombre": "n_mutaciones",
+                        "valor": 1,
+                    }
+                    await estadisticaAdn.create(body);
+                }
+
+
                 return res.status(200).json({
                     mensaje: 'OK'
                 })
             } else {
+
+                if (esValida) {
+
+                    let body = {
+                        "ADN": dna,
+                        "mutado": 0,
+                    }
+                    await registroAdn.create(body);
+                    console.log("1")
+                    const cantidad = await estadisticaAdn.findOne({ nombre: "n_Nomutaciones" });
+                    console.log("2")
+                    if (cantidad) {
+                        body = {
+                            "valor": 1 + cantidad.valor,
+                        }
+                        console.log("3")
+                        await estadisticaAdn.update(body);
+                    } else {
+                        console.log("4")
+                        body = {
+                            "nombre": "n_Nomutaciones",
+                            "valor": 1,
+                        }
+                        await estadisticaAdn.create(body);
+                    }
+
+                }
+
                 return res.status(403).json({
                     mensaje: 'Forbidden'
                 })
