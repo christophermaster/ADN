@@ -25,6 +25,7 @@ function esBaseNitrogenadaValida(dna) {
 
     return esValida;
 }
+
 //funcion q verifica adn Mutado
 function hasMutation(dna) {
 
@@ -72,28 +73,31 @@ function hasMutation(dna) {
         }
 
 
-        if (nSeguidasHorizontal === 4) {
-            nSecuencias++
-        }
-        if (nSeguidasVertical === 4) {
+        if (nSeguidasHorizontal === 4 || nSeguidasVertical === 4) {
             nSecuencias++
         }
     }
 
-    //diagonal
+  
     for (let i = 0; i < 2 * n - 1; i++) {
 
         let ultimoCaracter = ""
         let nSeguidas = 0
 
+        let ultimoCaracterInversa = ""
+        let nSeguidasInversa = 0
+
         const col_inicial = Math.max(0, i - n)
         const iteraciones = Math.min(i, (n - col_inicial), n)
+
         if (iteraciones >= 4) {
 
             for (let j = 0; j < iteraciones; j++) {
 
-                const caracterActual = dna[Math.min(n, i) - j - 1][col_inicial + j]
-
+                const auxI = Math.min(n, i) - j - 1
+                const auxJ = col_inicial + j
+                let caracterActual = dna[auxI][auxJ]
+                //diagonal
                 if (ultimoCaracter === "" || ultimoCaracter === caracterActual) {
                     nSeguidas++
                 } else {
@@ -102,14 +106,27 @@ function hasMutation(dna) {
                     }
                     nSeguidas = 1
                 }
-                ultimoCaracter = caracterActual;
+                ultimoCaracter = caracterActual
+
+                caracterActual = dna[auxI][n-auxJ-1]
+                //diagonal inversa
+                if (ultimoCaracterInversa === "" || ultimoCaracterInversa === caracterActual) {
+                    nSeguidasInversa++
+                } else {
+                    if (nSeguidasInversa === 4) {
+                        nSecuencias++
+                    }
+                    nSeguidasInversa = 1
+                }
+                ultimoCaracterInversa = caracterActual
             }
 
-            if (nSeguidas === 4) {
+            if (nSeguidas === 4 || nSeguidasInversa === 4) {
                 nSecuencias++
             }
         }
     }
+
 
     return nSecuencias > 1
 }
